@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حاسبة الزكاة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0B2E2C;
+    --bg-2: #0F3A37;
+    --surface: #F4EFE1;
+    --surface-2: #FFFFFF;
+    --ink: #1B2E2A;
+    --ink-soft: #4B5F5A;
+    --gold: #C9A227;
+    --gold-bright: #E3B94A;
+    --line: rgba(201,162,39,0.28);
+    --good: #3F7A5B;
+    --warn: #B5482F;
+    --radius: 18px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: radial-gradient(circle at 50% -10%, #123F3C 0%, var(--bg) 55%, #081F1D 100%);
+    color: var(--surface);
+    font-family: 'Cairo', sans-serif;
+    min-height:100vh;
+    padding-bottom: 60px;
+  }
+  .wrap{ max-width: 520px; margin:0 auto; padding: 22px 16px 10px; }
+
+  /* Header */
+  header.hero{ text-align:center; padding: 18px 10px 26px; position:relative; }
+  .crescent{
+    width:56px; height:56px; margin:0 auto 10px;
+    border-radius:50%;
+    background: var(--gold-bright);
+    box-shadow: -16px 0 0 -6px var(--bg), 0 0 24px rgba(227,185,74,0.55);
+    position:relative;
+  }
+  .crescent::after{
+    content:'';
+    position:absolute; inset:0;
+    border-radius:50%;
+    background: radial-gradient(circle at 38% 50%, transparent 0 60%, var(--bg-2) 61%);
+  }
+  h1{ font-family:'Amiri', serif; font-weight:700; font-size: 30px; margin:0; letter-spacing:.5px; }
+  .sub{ color: rgba(244,239,225,0.65); font-size:13.5px; margin-top:6px; }
+
+  /* Card */
+  .card{
+    background: var(--surface);
+    color: var(--ink);
+    border-radius: var(--radius);
+    padding: 18px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    border: 1px solid rgba(0,0,0,0.03);
+  }
+  .card h2{
+    font-family:'Amiri', serif;
+    font-size: 19px;
+    margin: 0 0 4px;
+    display:flex; align-items:center; gap:8px;
+    color: var(--bg);
+  }
+  .card .hint{ font-size:12.5px; color: var(--ink-soft); margin: 0 0 14px; line-height:1.6; }
+  .eyebrow{
+    font-size:11px; letter-spacing:1px; color: var(--gold);
+    font-weight:700; text-transform:uppercase; margin-bottom:2px;
+  }
+
+  label{ display:block; font-size:13px; color: var(--ink-soft); margin-bottom:5px; font-weight:600; }
+  input[type=number], input[type=text], input[type=date], select{
+    width:100%; padding:10px 12px; border-radius:10px; border:1.5px solid rgba(27,46,42,0.15);
+    background: var(--surface-2); color: var(--ink); font-family:'Cairo',sans-serif; font-size:15px;
+    outline:none; transition: border-color .15s;
+  }
+  input:focus, select:focus{ border-color: var(--gold); }
+  .row{ display:flex; gap:10px; margin-bottom:12px; }
+  .row > div{ flex:1; min-width:0; }
+  .field{ margin-bottom:12px; }
+
+  button{
+    font-family:'Cairo',sans-serif; font-weight:700; border:none; cursor:pointer;
+    border-radius:12px; padding:11px 16px; font-size:14.5px; transition: transform .1s, opacity .15s;
+  }
+  button:active{ transform: scale(0.97); }
+  .btn-primary{ background: var(--bg); color: var(--gold-bright); width:100%; }
+  .btn-gold{ background: linear-gradient(135deg, var(--gold-bright), var(--gold)); color:#2A2005; width:100%; }
+  .btn-ghost{ background: transparent; color: var(--bg); border:1.5px solid rgba(27,46,42,0.2); }
+  .btn-small{ padding:7px 10px; font-size:13px; border-radius:9px; }
+  .btn-del{ background: rgba(181,72,47,0.1); color: var(--warn); }
+
+  .acc-row{
+    display:flex; gap:8px; align-items:flex-end; margin-bottom:10px;
+    padding-bottom:10px; border-bottom: 1px dashed rgba(27,46,42,0.12);
+  }
+  .acc-row:last-child{ border-bottom:none; margin-bottom:0; padding-bottom:0; }
+  .acc-row .name{ flex:2; }
+  .acc-row .cur{ flex:1; }
+  .acc-row .amt{ flex:1.3; }
+
+  .totals{
+    background: var(--bg);
+    color: var(--surface);
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 4px;
+  }
+  .totals .big{ font-family:'Amiri', serif; font-size: 30px; font-weight:700; color: var(--gold-bright); }
+  .totals .label{ font-size:12px; opacity:.75; margin-bottom:2px; }
+  .totals .grid3{ display:flex; gap:10px; margin-top:12px; }
+  .totals .grid3 div{ flex:1; background: rgba(255,255,255,0.06); border-radius:10px; padding:9px; text-align:center; }
+  .totals .grid3 .v{ font-size:14px; font-weight:700; }
+  .totals .grid3 .k{ font-size:10.5px; opacity:.7; margin-top:2px; }
+
+  .badge{
+    display:inline-flex; align-items:center; gap:6px;
+    padding: 6px 12px; border-radius:100px; font-size:13px; font-weight:700; margin-top:10px;
+  }
+  .badge.above{ background: rgba(63,122,91,0.15); color: var(--good); }
+  .badge.below{ background: rgba(181,72,47,0.12); color: var(--warn); }
+  .badge::before{ content:'●'; font-size:9px; }
+
+  /* Hawl progress */
+  .moon-ring{ display:flex; align-items:center; gap:16px; }
+  .ring{
+    width:84px; height:84px; border-radius:50%; flex-shrink:0;
+    background: conic-gradient(var(--gold) calc(var(--pct,0)*1%), rgba(27,46,42,0.1) 0);
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+  }
+  .ring::before{ content:''; position:absolute; inset:8px; border-radius:50%; background: var(--surface); }
+  .ring span{ position:relative; font-weight:800; font-size:15px; color: var(--bg); }
+  .hawl-info .d{ font-size:13px; line-height:1.9; color: var(--ink-soft); }
+  .hawl-info .d b{ color: var(--ink); }
+
+  .due-box{
+    background: linear-gradient(135deg, #1E4A44, #0B2E2C);
+    color: var(--surface);
+    border-radius:14px; padding:16px; text-align:center;
+  }
+  .due-box .amt{ font-family:'Amiri', serif; font-size:32px; color: var(--gold-bright); font-weight:700; }
+
+  .hist-item{
+    display:flex; justify-content:space-between; align-items:center;
+    padding: 10px 0; border-bottom: 1px dashed rgba(27,46,42,0.12); font-size:13.5px;
+  }
+  .hist-item:last-child{ border-bottom:none; }
+  .hist-item .t{ color: var(--ink-soft); font-size:11.5px; }
+  .empty{ text-align:center; color: var(--ink-soft); font-size:13px; padding:14px 0; }
+
+  a.link{ color: var(--bg); font-weight:700; text-decoration:underline; }
+  .footnote{ text-align:center; color: rgba(244,239,225,0.45); font-size:11.5px; margin-top:18px; line-height:1.8; padding:0 10px;}
+  .save-msg{ text-align:center; font-size:12.5px; color: var(--gold-bright); height:16px; margin-top:6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="crescent"></div>
+    <h1>حاسبة الزكاة</h1>
+    <div class="sub">تابع النصاب والحول واحسب زكاتك بسهولة</div>
+  </header>
+
+  <!-- Prices -->
+  <div class="card">
+    <div class="eyebrow">الخطوة الأولى</div>
+    <h2>سعر الذهب والعملات</h2>
+    <p class="hint">دوس "تحديث الأسعار الآن (لايف)" وهيجيب سعر الذهب وسعري الصرف مباشرة. أو دخّلهم يدوي لو حبيت.</p>
+
+    <div class="field">
+      <label>سعر جرام الذهب عيار 24 (يورو)</label>
+      <input type="number" step="0.01" id="goldPrice" placeholder="مثال: 122.00">
+    </div>
+    <div class="row">
+      <div>
+        <label>الجنيه المصري ⇄ يورو (١ جنيه =)</label>
+        <input type="number" step="0.0000001" id="rateEGP" placeholder="0.0172">
+      </div>
+      <div>
+        <label>الدولار ⇄ يورو (١ دولار =)</label>
+        <input type="number" step="0.0001" id="rateUSD" placeholder="0.8643">
+      </div>
+    </div>
+    <div class="field">
+      <label>النصاب بالجرام (المعتاد ٨٥ جرام)</label>
+      <input type="number" step="0.1" id="nisabGrams" placeholder="85">
+    </div>
+    <button class="btn-gold" onclick="fetchLivePrices()" id="liveBtn">🔄 تحديث الأسعار الآن (لايف)</button>
+    <div class="save-msg" id="liveMsg"></div>
+    <button class="btn-primary" style="margin-top:10px;" onclick="saveSettings()">حفظ الأسعار</button>
+  </div>
+
+  <!-- Accounts -->
+  <div class="card">
+    <div class="eyebrow">الخطوة الثانية</div>
+    <h2>حساباتي ومحافظي</h2>
+    <p class="hint">أضف كل حساب أو محفظة بعملتها الأصلية، والتطبيق هيحوّلها كلها لليورو تلقائيًا.</p>
+    <div id="accountsList"></div>
+    <button class="btn-ghost btn-small" style="margin-top:10px;" onclick="addAccount()">+ إضافة حساب</button>
+  </div>
+
+  <!-- Totals -->
+  <div class="card">
+    <h2>الإجمالي مقابل النصاب</h2>
+    <div class="totals">
+      <div class="label">إجمالي أموالك</div>
+      <div class="big" id="totalEUR">€0.00</div>
+      <div class="grid3">
+        <div><div class="v" id="totalUSD">$0</div><div class="k">دولار</div></div>
+        <div><div class="v" id="totalEGP">0</div><div class="k">جنيه</div></div>
+        <div><div class="v" id="nisabValEUR">€0</div><div class="k">قيمة النصاب</div></div>
+      </div>
+    </div>
+    <div id="statusBadge"></div>
+  </div>
+
+  <!-- Hawl -->
+  <div class="card">
+    <h2>الحول 🌙</h2>
+    <div class="moon-ring">
+      <div class="ring" id="ringEl" style="--pct:0"><span id="ringPct">0%</span></div>
+      <div class="hawl-info">
+        <div class="d" id="hawlText">لسه ما وصلتش النصاب.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Zakat due -->
+  <div class="card" id="zakatCard" style="display:none;">
+    <h2>الزكاة المستحقة</h2>
+    <div class="due-box">
+      <div class="label" style="opacity:.7; font-size:12px;">اكتمل الحول والمال فوق النصاب</div>
+      <div class="amt" id="zakatEUR">€0.00</div>
+      <div class="grid3" style="margin-top:12px;">
+        <div><div class="v" id="zakatUSD">$0</div><div class="k">دولار</div></div>
+        <div><div class="v" id="zakatEGP">0</div><div class="k">جنيه</div></div>
+      </div>
+    </div>
+    <button class="btn-gold" style="margin-top:12px;" onclick="payZakat()">✓ سجّلت دفع الزكاة</button>
+  </div>
+
+  <!-- History -->
+  <div class="card">
+    <h2>السجل</h2>
+    <p class="hint">احفظ لقطة من حسابك الحالي، زي التبويبات بالتواريخ في الملف القديم.</p>
+    <button class="btn-ghost btn-small" onclick="saveSnapshot()">حفظ لقطة اليوم في السجل</button>
+    <div class="save-msg" id="saveMsg"></div>
+    <div id="historyList" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="footnote">
+    الحساب تقريبي بيعتمد على البيانات اللي بتدخلها. سنة الحول محسوبة تقريبًا بالسنة الهجرية (٣٥٤ يوم). راجع أهل العلم أو دار إفتاء موثوقة للتأكد من مقدار الزكاة الواجب عليك.
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'zakat-app-data-v1';
+const HAWL_DAYS = 354; // approx lunar year
+let data = null;
+
+function defaultData(){
+  return {
+    settings: { goldPrice: 122, rateEGP: 0.0172, rateUSD: 0.8643, nisabGrams: 85 },
+    accounts: [
+      { id: cryptoRandom(), name: 'حساب يورو', currency: 'EUR', amount: 0 },
+      { id: cryptoRandom(), name: 'حساب دولار', currency: 'USD', amount: 0 },
+      { id: cryptoRandom(), name: 'حساب جنيه', currency: 'EGP', amount: 0 }
+    ],
+    hawl: { nisabDate: null, lastZakatPaidDate: null },
+    history: []
+  };
+}
+
+function cryptoRandom(){
+  return 'a' + Math.random().toString(36).slice(2, 10);
+}
+
+async function loadData(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    data = res && res.value ? JSON.parse(res.value) : defaultData();
+  }catch(e){
+    data = defaultData();
+  }
+  render();
+}
+
+async function persist(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(data), false);
+  }catch(e){
+    console.error('storage error', e);
+  }
+}
+
+function fmt(n, decimals=2){
+  if(isNaN(n)) n = 0;
+  return n.toLocaleString('en-US', {minimumFractionDigits:decimals, maximumFractionDigits:decimals});
+}
+
+function toEUR(amount, currency){
+  const s = data.settings;
+  if(currency === 'EUR') return amount;
+  if(currency === 'USD') return amount * (s.rateUSD || 0);
+  if(currency === 'EGP') return amount * (s.rateEGP || 0);
+  return amount;
+}
+
+function renderSettingsInputs(){
+  const s = data.settings;
+  document.getElementById('goldPrice').value = s.goldPrice ?? '';
+  document.getElementById('rateEGP').value = s.rateEGP ?? '';
+  document.getElementById('rateUSD').value = s.rateUSD ?? '';
+  document.getElementById('nisabGrams').value = s.nisabGrams ?? '';
+}
+
+// ضع مفتاح goldapi.io بتاعك هنا (احتفظ بيه سري قدر الإمكان — أي حد يفتح الصفحة يقدر يشوفه في الكود)
+const GOLDAPI_KEY = "goldapi-b7168323a9ff4f74917d5a560945adf7-io";
+
+async function fetchLivePrices(){
+  const btn = document.getElementById('liveBtn');
+  const msg = document.getElementById('liveMsg');
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = 'بيدوّر دلوقتي...';
+  msg.textContent = '';
+
+  try{
+    // 1) أسعار الصرف من Frankfurter (مجاني، من غير مفتاح)
+    const fxRes = await fetch('https://api.frankfurter.dev/v1/latest?base=EUR&symbols=USD,EGP');
+    if(!fxRes.ok) throw new Error('fx HTTP ' + fxRes.status);
+    const fx = await fxRes.json();
+    const usdToEur = 1 / fx.rates.USD;
+    const egpToEur = 1 / fx.rates.EGP;
+
+    // 2) سعر الذهب من goldapi.io (محتاج مفتاح مجاني)
+    const goldRes = await fetch('https://www.goldapi.io/api/XAU/EUR', {
+      headers: { 'x-access-token': GOLDAPI_KEY, 'Content-Type': 'application/json' }
+    });
+    if(!goldRes.ok) throw new Error('gold HTTP ' + goldRes.status);
+    const gold = await goldRes.json();
+    // goldapi بيرجع price_gram_24k جاهز
+    const goldPricePerGram24kEUR = gold.price_gram_24k;
+
+    document.getElementById('goldPrice').value = Number(goldPricePerGram24kEUR).toFixed(2);
+    document.getElementById('rateEGP').value = Number(egpToEur).toFixed(7);
+    document.getElementById('rateUSD').value = Number(usdToEur).toFixed(4);
+
+    saveSettings();
+    msg.textContent = 'تم التحديث ✓ متنساش تراجع الأرقام';
+  }catch(e){
+    console.error(e);
+    msg.textContent = 'معرفتش أجيب الأسعار لايف — تأكد إنك متصل بالنت أو دخّل الأسعار يدوي.';
+  }finally{
+    btn.disabled = false;
+    btn.textContent = originalText;
+    setTimeout(() => { msg.textContent = ''; }, 6000);
+  }
+}
+
+function saveSettings(){
+  data.settings.goldPrice = parseFloat(document.getElementById('goldPrice').value) || 0;
+  data.settings.rateEGP = parseFloat(document.getElementById('rateEGP').value) || 0;
+  data.settings.rateUSD = parseFloat(document.getElementById('rateUSD').value) || 0;
+  data.settings.nisabGrams = parseFloat(document.getElementById('nisabGrams').value) || 0;
+  persist();
+  computeAndRender();
+}
+
+function renderAccounts(){
+  const list = document.getElementById('accountsList');
+  list.innerHTML = '';
+  data.accounts.forEach(acc => {
+    const row = document.createElement('div');
+    row.className = 'acc-row';
+    row.innerHTML = `
+      <div class="name">
+        <label>الاسم</label>
+        <input type="text" value="${escapeHtml(acc.name)}" onchange="updateAccount('${acc.id}','name',this.value)">
+      </div>
+      <div class="cur">
+        <label>العملة</label>
+        <select onchange="updateAccount('${acc.id}','currency',this.value)">
+          <option value="EUR" ${acc.currency==='EUR'?'selected':''}>يورو</option>
+          <option value="USD" ${acc.currency==='USD'?'selected':''}>دولار</option>
+          <option value="EGP" ${acc.currency==='EGP'?'selected':''}>جنيه</option>
+        </select>
+      </div>
+      <div class="amt">
+        <label>المبلغ</label>
+        <input type="number" step="0.01" value="${acc.amount}" onchange="updateAccount('${acc.id}','amount',parseFloat(this.value)||0)">
+      </div>
+      <button class="btn-del btn-small" onclick="removeAccount('${acc.id}')">حذف</button>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.innerText = str;
+  return d.innerHTML;
+}
+
+function updateAccount(id, field, value){
+  const acc = data.accounts.find(a => a.id === id);
+  if(!acc) return;
+  acc[field] = value;
+  persist();
+  computeAndRender();
+}
+
+function addAccount(){
+  data.accounts.push({ id: cryptoRandom(), name: 'حساب جديد', currency: 'EUR', amount: 0 });
+  persist();
+  render();
+}
+
+function removeAccount(id){
+  data.accounts = data.accounts.filter(a => a.id !== id);
+  persist();
+  render();
+}
+
+function computeTotals(){
+  const totalEUR = data.accounts.reduce((sum, a) => sum + toEUR(a.amount || 0, a.currency), 0);
+  const nisabValEUR = (data.settings.goldPrice || 0) * (data.settings.nisabGrams || 0);
+  return { totalEUR, nisabValEUR };
+}
+
+function computeAndRender(){
+  const { totalEUR, nisabValEUR } = computeTotals();
+  const s = data.settings;
+  const totalUSD = s.rateUSD ? totalEUR / s.rateUSD : 0;
+  const totalEGP = s.rateEGP ? totalEUR / s.rateEGP : 0;
+
+  document.getElementById('totalEUR').textContent = '€' + fmt(totalEUR);
+  document.getElementById('totalUSD').textContent = '$' + fmt(totalUSD, 0);
+  document.getElementById('totalEGP').textContent = fmt(totalEGP, 0);
+  document.getElementById('nisabValEUR').textContent = '€' + fmt(nisabValEUR, 0);
+
+  const aboveNisab = totalEUR >= nisabValEUR && nisabValEUR > 0;
+  const badge = document.getElementById('statusBadge');
+  badge.innerHTML = aboveNisab
+    ? `<span class="badge above">تجاوزتِ النصاب</span>`
+    : `<span class="badge below">لسه أقل من النصاب</span>`;
+
+  // Hawl logic
+  const today = new Date(); today.setHours(0,0,0,0);
+  const hawl = data.hawl;
+
+  if(aboveNisab){
+    if(!hawl.nisabDate){
+      hawl.nisabDate = today.toISOString().slice(0,10);
+      persist();
+    }
+  } else {
+    if(hawl.nisabDate){
+      hawl.nisabDate = null;
+      hawl.lastZakatPaidDate = null;
+      persist();
+    }
+  }
+
+  const ringEl = document.getElementById('ringEl');
+  const ringPct = document.getElementById('ringPct');
+  const hawlText = document.getElementById('hawlText');
+  const zakatCard = document.getElementById('zakatCard');
+
+  if(!hawl.nisabDate){
+    ringEl.style.setProperty('--pct', 0);
+    ringPct.textContent = '0%';
+    hawlText.innerHTML = `لسه ما وصلتش النصاب. لما إجمالي أموالك يتعدى <b>€${fmt(nisabValEUR,0)}</b> هيبدأ عدّ الحول تلقائيًا.`;
+    zakatCard.style.display = 'none';
+    return;
+  }
+
+  const anchorDateStr = hawl.lastZakatPaidDate || hawl.nisabDate;
+  const anchorDate = new Date(anchorDateStr);
+  const dueDate = new Date(anchorDate); dueDate.setDate(dueDate.getDate() + HAWL_DAYS);
+  const daysElapsed = Math.floor((today - anchorDate) / 86400000);
+  const daysLeft = Math.floor((dueDate - today) / 86400000);
+  const pct = Math.max(0, Math.min(100, Math.round((daysElapsed / HAWL_DAYS) * 100)));
+
+  ringEl.style.setProperty('--pct', pct);
+  ringPct.textContent = pct + '%';
+
+  const hijriNote = hawl.lastZakatPaidDate ? 'من تاريخ آخر زكاة' : 'من يوم بلوغ النصاب';
+  const dueDateStr = dueDate.toLocaleDateString('ar-EG', {year:'numeric', month:'long', day:'numeric'});
+  const startDateStr = anchorDate.toLocaleDateString('ar-EG', {year:'numeric', month:'long', day:'numeric'});
+
+  if(daysLeft > 0){
+    hawlText.innerHTML = `بدأ الحول (${hijriNote}) في <b>${startDateStr}</b>.<br>يكتمل الحول بعد <b>${daysLeft} يوم</b> — بتاريخ <b>${dueDateStr}</b>.`;
+    zakatCard.style.display = 'none';
+  } else {
+    hawlText.innerHTML = `اكتمل الحول من <b>${startDateStr}</b> وأنت فوق النصاب. الزكاة مستحقة الآن 👇`;
+    zakatCard.style.display = 'block';
+    const zakatEUR = totalEUR * 0.025;
+    const zakatUSD = s.rateUSD ? zakatEUR / s.rateUSD : 0;
+    const zakatEGP = s.rateEGP ? zakatEUR / s.rateEGP : 0;
+    document.getElementById('zakatEUR').textContent = '€' + fmt(zakatEUR);
+    document.getElementById('zakatUSD').textContent = '$' + fmt(zakatUSD, 0);
+    document.getElementById('zakatEGP').textContent = fmt(zakatEGP, 0);
+  }
+}
+
+function payZakat(){
+  const { totalEUR } = computeTotals();
+  const zakatEUR = totalEUR * 0.025;
+  const today = new Date().toISOString().slice(0,10);
+  data.history.unshift({
+    date: today,
+    type: 'zakat_paid',
+    totalEUR,
+    zakatEUR
+  });
+  data.hawl.lastZakatPaidDate = today;
+  persist();
+  render();
+}
+
+function saveSnapshot(){
+  const { totalEUR, nisabValEUR } = computeTotals();
+  const today = new Date().toISOString().slice(0,10);
+  data.history.unshift({
+    date: today,
+    type: 'snapshot',
+    totalEUR,
+    nisabValEUR,
+    aboveNisab: totalEUR >= nisabValEUR
+  });
+  persist();
+  renderHistory();
+  const msg = document.getElementById('saveMsg');
+  msg.textContent = 'تم الحفظ ✓';
+  setTimeout(() => msg.textContent = '', 1800);
+}
+
+function renderHistory(){
+  const list = document.getElementById('historyList');
+  if(!data.history.length){
+    list.innerHTML = '<div class="empty">لسه مفيش سجل محفوظ</div>';
+    return;
+  }
+  list.innerHTML = '';
+  data.history.forEach((h, idx) => {
+    const row = document.createElement('div');
+    row.className = 'hist-item';
+    const dateStr = new Date(h.date).toLocaleDateString('ar-EG', {year:'numeric', month:'short', day:'numeric'});
+    if(h.type === 'zakat_paid'){
+      row.innerHTML = `<div><div>💰 دفع زكاة: €${fmt(h.zakatEUR)}</div><div class="t">${dateStr} — الإجمالي وقتها €${fmt(h.totalEUR)}</div></div>
+        <button class="btn-del btn-small" onclick="removeHistory(${idx})">حذف</button>`;
+    } else {
+      row.innerHTML = `<div><div>${h.aboveNisab ? '📈' : '📉'} إجمالي €${fmt(h.totalEUR)} ${h.aboveNisab ? '(فوق النصاب)' : '(تحت النصاب)'}</div><div class="t">${dateStr}</div></div>
+        <button class="btn-del btn-small" onclick="removeHistory(${idx})">حذف</button>`;
+    }
+    list.appendChild(row);
+  });
+}
+
+function removeHistory(idx){
+  data.history.splice(idx, 1);
+  persist();
+  renderHistory();
+}
+
+function render(){
+  renderSettingsInputs();
+  renderAccounts();
+  computeAndRender();
+  renderHistory();
+}
+
+loadData();
+</script>
+</body>
+</html>
