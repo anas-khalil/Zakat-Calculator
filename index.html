@@ -284,8 +284,8 @@ function cryptoRandom(){
 
 async function loadData(){
   try{
-    const res = await window.storage.get(STORAGE_KEY, false);
-    data = res && res.value ? JSON.parse(res.value) : defaultData();
+    const raw = localStorage.getItem(STORAGE_KEY);
+    data = raw ? JSON.parse(raw) : defaultData();
   }catch(e){
     data = defaultData();
   }
@@ -294,7 +294,7 @@ async function loadData(){
 
 async function persist(){
   try{
-    await window.storage.set(STORAGE_KEY, JSON.stringify(data), false);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }catch(e){
     console.error('storage error', e);
   }
