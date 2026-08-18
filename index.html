@@ -158,6 +158,9 @@
   .footnote{ text-align:center; color: rgba(244,239,225,0.45); font-size:11.5px; margin-top:18px; line-height:1.8; padding:0 10px;}
   .save-msg{ text-align:center; font-size:12.5px; color: var(--gold-bright); height:16px; margin-top:6px; }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -167,6 +170,30 @@
     <h1>حاسبة الزكاة</h1>
     <div class="sub">تابع النصاب والحول واحسب زكاتك بسهولة</div>
   </header>
+
+  <!-- Auth -->
+  <div class="card" id="authCard">
+    <h2>تسجيل الدخول</h2>
+    <p class="hint">سجّل دخولك عشان بياناتك تتحفظ وتتزامن بين أي جهاز بتفتح بيه.</p>
+    <div class="field">
+      <label>الإيميل</label>
+      <input type="email" id="authEmail" placeholder="example@email.com" autocomplete="email">
+    </div>
+    <div class="field">
+      <label>الباسورد</label>
+      <input type="password" id="authPassword" placeholder="٦ أحرف على الأقل" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" onclick="doLogin()">دخول</button>
+    <button class="btn-ghost" style="margin-top:8px; width:100%;" onclick="doSignup()">إنشاء حساب جديد</button>
+    <div class="save-msg" id="authMsg"></div>
+  </div>
+
+  <div id="appContent" style="display:none;">
+
+  <div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
+    <span style="font-size:13px; color:var(--ink-soft);">مسجّل دخول بـ: <b id="userEmailLabel" style="color:var(--bg);"></b></span>
+    <button class="btn-ghost btn-small" onclick="doLogout()">خروج</button>
+  </div>
 
   <!-- Prices -->
   <div class="card">
@@ -258,12 +285,30 @@
   <div class="footnote">
     الحساب تقريبي بيعتمد على البيانات اللي بتدخلها. سنة الحول محسوبة تقريبًا بالسنة الهجرية (٣٥٤ يوم). راجع أهل العلم أو دار إفتاء موثوقة للتأكد من مقدار الزكاة الواجب عليك.
   </div>
+
+  </div><!-- /appContent -->
 </div>
 
 <script>
-const STORAGE_KEY = 'zakat-app-data-v1';
 const HAWL_DAYS = 354; // approx lunar year
 let data = null;
+
+// ====== ضع بيانات مشروع Firebase بتاعك هنا (من Firebase Console → Project settings) ======
+const firebaseConfig = {
+  apiKey: "AIzaSyAG8OhELZ1zQ8Ec0GGj6fuKTL_uiB0XFUg",
+  authDomain: "zakat-calculator-ed533.firebaseapp.com",
+  databaseURL: "https://zakat-calculator-ed533-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "zakat-calculator-ed533",
+  storageBucket: "zakat-calculator-ed533.firebasestorage.app",
+  messagingSenderId: "424781330561",
+  appId: "1:424781330561:web:e56ef0ecf718ee5b3ef580"
+};
+// =========================================================================================
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+let currentUser = null;
 
 function defaultData(){
   return {
@@ -284,21 +329,70 @@ function cryptoRandom(){
 
 async function loadData(){
   try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    data = raw ? JSON.parse(raw) : defaultData();
+    const doc = await db.collection('zakatUsers').doc(currentUser.uid).get();
+    data = doc.exists ? doc.data() : defaultData();
   }catch(e){
+    console.error('load error', e);
     data = defaultData();
   }
   render();
 }
 
 async function persist(){
+  if(!currentUser) return;
   try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    await db.collection('zakatUsers').doc(currentUser.uid).set(data);
   }catch(e){
     console.error('storage error', e);
   }
 }
+
+// ---- Auth ----
+function showAuthMsg(text){
+  document.getElementById('authMsg').textContent = text;
+}
+
+function doSignup(){
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  if(!email || password.length < 6){
+    showAuthMsg('اكتب إيميل صحيح وباسورد ٦ أحرف على الأقل');
+    return;
+  }
+  showAuthMsg('بيتم إنشاء الحساب...');
+  auth.createUserWithEmailAndPassword(email, password)
+    .catch(err => showAuthMsg('خطأ: ' + err.message));
+}
+
+function doLogin(){
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  if(!email || !password){
+    showAuthMsg('اكتب الإيميل والباسورد');
+    return;
+  }
+  showAuthMsg('بيتم الدخول...');
+  auth.signInWithEmailAndPassword(email, password)
+    .catch(err => showAuthMsg('خطأ: ' + err.message));
+}
+
+function doLogout(){
+  auth.signOut();
+}
+
+auth.onAuthStateChanged(async (user) => {
+  if(user){
+    currentUser = user;
+    document.getElementById('authCard').style.display = 'none';
+    document.getElementById('appContent').style.display = 'block';
+    document.getElementById('userEmailLabel').textContent = user.email;
+    await loadData();
+  } else {
+    currentUser = null;
+    document.getElementById('authCard').style.display = 'block';
+    document.getElementById('appContent').style.display = 'none';
+  }
+});
 
 function fmt(n, decimals=2){
   if(isNaN(n)) n = 0;
@@ -578,7 +672,7 @@ function render(){
   renderHistory();
 }
 
-loadData();
+// ملحوظة: loadData() بتتنادى تلقائيًا من auth.onAuthStateChanged لما المستخدم يسجّل دخول
 </script>
 </body>
 </html>
