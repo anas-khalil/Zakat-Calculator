@@ -34,18 +34,11 @@
 
   /* Header */
   header.hero{ text-align:center; padding: 18px 10px 26px; position:relative; }
-  .crescent{
-    width:56px; height:56px; margin:0 auto 10px;
-    border-radius:50%;
-    background: var(--gold-bright);
-    box-shadow: -16px 0 0 -6px var(--bg), 0 0 24px rgba(227,185,74,0.55);
-    position:relative;
-  }
-  .crescent::after{
-    content:'';
-    position:absolute; inset:0;
-    border-radius:50%;
-    background: radial-gradient(circle at 38% 50%, transparent 0 60%, var(--bg-2) 61%);
+  .logo{
+    width:88px; height:88px; margin:0 auto 10px;
+    border-radius:22px;
+    display:block;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35), 0 0 0 1px rgba(227,185,74,0.25);
   }
   h1{ font-family:'Amiri', serif; font-weight:700; font-size: 30px; margin:0; letter-spacing:.5px; }
   .sub{ color: rgba(244,239,225,0.65); font-size:13.5px; margin-top:6px; }
@@ -166,7 +159,7 @@
 <div class="wrap">
 
   <header class="hero">
-    <div class="crescent"></div>
+    <img class="logo" src="data:image/jpeg;base64,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" alt="حاسبة الزكاة">
     <h1>حاسبة الزكاة</h1>
     <div class="sub">تابع النصاب والحول واحسب زكاتك بسهولة</div>
   </header>
@@ -199,36 +192,26 @@
   <div class="card">
     <div class="eyebrow">الخطوة الأولى</div>
     <h2>سعر الذهب والعملات</h2>
-    <p class="hint">دوس "تحديث الأسعار الآن (لايف)" وهيجيب سعر الذهب وسعري الصرف مباشرة. أو دخّلهم يدوي لو حبيت.</p>
+    <p class="hint">دوس "تحديث سعر الذهب الآن (لايف)" وهيجيب آخر سعر لجرام الذهب. أو دخّله يدوي لو حبيت.</p>
 
     <div class="field">
       <label>سعر جرام الذهب عيار 24 (يورو)</label>
       <input type="number" step="0.01" id="goldPrice" placeholder="مثال: 122.00">
     </div>
-    <div class="row">
-      <div>
-        <label>الجنيه المصري ⇄ يورو (١ جنيه =)</label>
-        <input type="number" step="0.0000001" id="rateEGP" placeholder="0.0172">
-      </div>
-      <div>
-        <label>الدولار ⇄ يورو (١ دولار =)</label>
-        <input type="number" step="0.0001" id="rateUSD" placeholder="0.8643">
-      </div>
-    </div>
     <div class="field">
       <label>النصاب بالجرام (المعتاد ٨٥ جرام)</label>
       <input type="number" step="0.1" id="nisabGrams" placeholder="85">
     </div>
-    <button class="btn-gold" onclick="fetchLivePrices()" id="liveBtn">🔄 تحديث الأسعار الآن (لايف)</button>
+    <button class="btn-gold" onclick="fetchLivePrices()" id="liveBtn">🔄 تحديث سعر الذهب الآن (لايف)</button>
     <div class="save-msg" id="liveMsg"></div>
-    <button class="btn-primary" style="margin-top:10px;" onclick="saveSettings()">حفظ الأسعار</button>
+    <button class="btn-primary" style="margin-top:10px;" onclick="saveSettings()">حفظ السعر</button>
   </div>
 
   <!-- Accounts -->
   <div class="card">
     <div class="eyebrow">الخطوة الثانية</div>
     <h2>حساباتي ومحافظي</h2>
-    <p class="hint">أضف كل حساب أو محفظة بعملتها الأصلية، والتطبيق هيحوّلها كلها لليورو تلقائيًا.</p>
+    <p class="hint">أضف كل حساب أو محفظة بعملتها، والتطبيق هيجيب سعر تحويلها لليورو تلقائيًا.</p>
     <div id="accountsList"></div>
     <button class="btn-ghost btn-small" style="margin-top:10px;" onclick="addAccount()">+ إضافة حساب</button>
   </div>
@@ -237,12 +220,10 @@
   <div class="card">
     <h2>الإجمالي مقابل النصاب</h2>
     <div class="totals">
-      <div class="label">إجمالي أموالك</div>
+      <div class="label">إجمالي أموالك (باليورو)</div>
       <div class="big" id="totalEUR">€0.00</div>
       <div class="grid3">
-        <div><div class="v" id="totalUSD">$0</div><div class="k">دولار</div></div>
-        <div><div class="v" id="totalEGP">0</div><div class="k">جنيه</div></div>
-        <div><div class="v" id="nisabValEUR">€0</div><div class="k">قيمة النصاب</div></div>
+        <div style="flex:1;"><div class="v" id="nisabValEUR">€0</div><div class="k">قيمة النصاب</div></div>
       </div>
     </div>
     <div id="statusBadge"></div>
@@ -251,6 +232,10 @@
   <!-- Hawl -->
   <div class="card">
     <h2>الحول 🌙</h2>
+    <div class="field">
+      <label>آخر مرة وصلت فيها للنصاب (لو حصل قبل كده)</label>
+      <input type="date" id="nisabDateInput" onchange="updateNisabDate(this.value)">
+    </div>
     <div class="moon-ring">
       <div class="ring" id="ringEl" style="--pct:0"><span id="ringPct">0%</span></div>
       <div class="hawl-info">
@@ -265,10 +250,6 @@
     <div class="due-box">
       <div class="label" style="opacity:.7; font-size:12px;">اكتمل الحول والمال فوق النصاب</div>
       <div class="amt" id="zakatEUR">€0.00</div>
-      <div class="grid3" style="margin-top:12px;">
-        <div><div class="v" id="zakatUSD">$0</div><div class="k">دولار</div></div>
-        <div><div class="v" id="zakatEGP">0</div><div class="k">جنيه</div></div>
-      </div>
     </div>
     <button class="btn-gold" style="margin-top:12px;" onclick="payZakat()">✓ سجّلت دفع الزكاة</button>
   </div>
@@ -313,9 +294,18 @@ auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
 let currentUser = null;
 let encryptionKey = null; // موجود في الذاكرة بس، مش بيتخزن في أي حتة
 
+const CURRENCIES = [
+  ['EUR','يورو'], ['USD','دولار أمريكي'], ['GBP','جنيه إسترليني'], ['EGP','جنيه مصري'],
+  ['SAR','ريال سعودي'], ['AED','درهم إماراتي'], ['KWD','دينار كويتي'], ['QAR','ريال قطري'],
+  ['BHD','دينار بحريني'], ['OMR','ريال عماني'], ['JOD','دينار أردني'], ['TRY','ليرة تركية'],
+  ['MAD','درهم مغربي'], ['TND','دينار تونسي'], ['DZD','دينار جزائري'], ['LYD','دينار ليبي'],
+  ['CHF','فرنك سويسري'], ['CAD','دولار كندي'], ['AUD','دولار أسترالي'], ['CNY','يوان صيني'],
+  ['INR','روبية هندية'], ['PKR','روبية باكستانية'], ['MYR','رينغيت ماليزي'], ['IDR','روبية إندونيسية']
+];
+
 function defaultData(){
   return {
-    settings: { goldPrice: 122, rateEGP: 0.0172, rateUSD: 0.8643, nisabGrams: 85 },
+    settings: { goldPrice: 122, nisabGrams: 85, rates: { EUR: { rate: 1, updatedAt: Date.now() } } },
     accounts: [
       { id: cryptoRandom(), name: 'حساب يورو', currency: 'EUR', amount: 0 },
       { id: cryptoRandom(), name: 'حساب دولار', currency: 'USD', amount: 0 },
@@ -371,6 +361,57 @@ async function decryptData(key, encObj){
   return JSON.parse(new TextDecoder().decode(plainBuf));
 }
 
+// ---- تحويل العملات لليورو (Frankfurter API، مجاني وبدون مفتاح) ----
+const RATE_CACHE_MS = 12 * 60 * 60 * 1000; // 12 ساعة
+
+async function fetchRateToEURFromAPI(currency){
+  try{
+    const res = await fetch(`https://api.frankfurter.dev/v1/latest?base=EUR&symbols=${currency}`);
+    if(res.ok){
+      const json = await res.json();
+      if(json.rates && json.rates[currency]) return 1 / json.rates[currency];
+    }
+  }catch(e){ /* fall through to v2 */ }
+  try{
+    const res2 = await fetch(`https://api.frankfurter.dev/v2/rates?base=EUR&quotes=${currency}`);
+    if(res2.ok){
+      const json2 = await res2.json();
+      if(Array.isArray(json2)){
+        const entry = json2.find(x => x.quote === currency);
+        if(entry) return 1 / entry.rate;
+      } else if(json2 && json2.rates && json2.rates[currency]){
+        return 1 / json2.rates[currency];
+      }
+    }
+  }catch(e){ /* give up */ }
+  return null;
+}
+
+async function getRateToEUR(currency){
+  if(currency === 'EUR') return 1;
+  if(!data.settings.rates) data.settings.rates = {};
+  const cached = data.settings.rates[currency];
+  const now = Date.now();
+  if(cached && cached.rate && (now - cached.updatedAt) < RATE_CACHE_MS){
+    return cached.rate;
+  }
+  const rate = await fetchRateToEURFromAPI(currency);
+  if(rate){
+    data.settings.rates[currency] = { rate, updatedAt: now };
+    persist();
+    return rate;
+  }
+  return cached ? cached.rate : 0; // استخدم آخر سعر معروف لو الجلب فشل
+}
+
+async function ensureAllRates(){
+  const currencies = [...new Set(data.accounts.map(a => a.currency).filter(c => c !== 'EUR'))];
+  for(const cur of currencies){
+    await getRateToEUR(cur);
+  }
+  computeAndRender();
+}
+
 async function loadData(){
   try{
     const doc = await db.collection('zakatUsers').doc(currentUser.uid).get();
@@ -391,6 +432,7 @@ async function loadData(){
     data = defaultData();
   }
   render();
+  ensureAllRates();
 }
 
 async function persist(){
@@ -474,18 +516,14 @@ function fmt(n, decimals=2){
 }
 
 function toEUR(amount, currency){
-  const s = data.settings;
   if(currency === 'EUR') return amount;
-  if(currency === 'USD') return amount * (s.rateUSD || 0);
-  if(currency === 'EGP') return amount * (s.rateEGP || 0);
-  return amount;
+  const r = data.settings.rates && data.settings.rates[currency];
+  return amount * (r ? r.rate : 0);
 }
 
 function renderSettingsInputs(){
   const s = data.settings;
   document.getElementById('goldPrice').value = s.goldPrice ?? '';
-  document.getElementById('rateEGP').value = s.rateEGP ?? '';
-  document.getElementById('rateUSD').value = s.rateUSD ?? '';
   document.getElementById('nisabGrams').value = s.nisabGrams ?? '';
 }
 
@@ -501,14 +539,7 @@ async function fetchLivePrices(){
   msg.textContent = '';
 
   try{
-    // 1) أسعار الصرف من Frankfurter (مجاني، من غير مفتاح)
-    const fxRes = await fetch('https://api.frankfurter.dev/v1/latest?base=EUR&symbols=USD,EGP');
-    if(!fxRes.ok) throw new Error('fx HTTP ' + fxRes.status);
-    const fx = await fxRes.json();
-    const usdToEur = 1 / fx.rates.USD;
-    const egpToEur = 1 / fx.rates.EGP;
-
-    // 2) سعر الذهب من goldapi.io (محتاج مفتاح مجاني)
+    // سعر الذهب من goldapi.io (محتاج مفتاح مجاني)
     const goldRes = await fetch('https://www.goldapi.io/api/XAU/EUR', {
       headers: { 'x-access-token': GOLDAPI_KEY, 'Content-Type': 'application/json' }
     });
@@ -518,14 +549,12 @@ async function fetchLivePrices(){
     const goldPricePerGram24kEUR = gold.price_gram_24k;
 
     document.getElementById('goldPrice').value = Number(goldPricePerGram24kEUR).toFixed(2);
-    document.getElementById('rateEGP').value = Number(egpToEur).toFixed(7);
-    document.getElementById('rateUSD').value = Number(usdToEur).toFixed(4);
 
     saveSettings();
-    msg.textContent = 'تم التحديث ✓ متنساش تراجع الأرقام';
+    msg.textContent = 'تم التحديث ✓ متنساش تراجع الرقم';
   }catch(e){
     console.error(e);
-    msg.textContent = 'معرفتش أجيب الأسعار لايف — تأكد إنك متصل بالنت أو دخّل الأسعار يدوي.';
+    msg.textContent = 'معرفتش أجيب سعر الذهب لايف — تأكد إنك متصل بالنت أو دخّله يدوي.';
   }finally{
     btn.disabled = false;
     btn.textContent = originalText;
@@ -535,8 +564,6 @@ async function fetchLivePrices(){
 
 function saveSettings(){
   data.settings.goldPrice = parseFloat(document.getElementById('goldPrice').value) || 0;
-  data.settings.rateEGP = parseFloat(document.getElementById('rateEGP').value) || 0;
-  data.settings.rateUSD = parseFloat(document.getElementById('rateUSD').value) || 0;
   data.settings.nisabGrams = parseFloat(document.getElementById('nisabGrams').value) || 0;
   persist();
   computeAndRender();
@@ -556,9 +583,7 @@ function renderAccounts(){
       <div class="cur">
         <label>العملة</label>
         <select onchange="updateAccount('${acc.id}','currency',this.value)">
-          <option value="EUR" ${acc.currency==='EUR'?'selected':''}>يورو</option>
-          <option value="USD" ${acc.currency==='USD'?'selected':''}>دولار</option>
-          <option value="EGP" ${acc.currency==='EGP'?'selected':''}>جنيه</option>
+          ${CURRENCIES.map(([code,label]) => `<option value="${code}" ${acc.currency===code?'selected':''}>${label}</option>`).join('')}
         </select>
       </div>
       <div class="amt">
@@ -577,12 +602,16 @@ function escapeHtml(str){
   return d.innerHTML;
 }
 
-function updateAccount(id, field, value){
+async function updateAccount(id, field, value){
   const acc = data.accounts.find(a => a.id === id);
   if(!acc) return;
   acc[field] = value;
   persist();
   computeAndRender();
+  if(field === 'currency' && value !== 'EUR'){
+    await getRateToEUR(value);
+    computeAndRender();
+  }
 }
 
 function addAccount(){
@@ -605,51 +634,43 @@ function computeTotals(){
 
 function computeAndRender(){
   const { totalEUR, nisabValEUR } = computeTotals();
-  const s = data.settings;
-  const totalUSD = s.rateUSD ? totalEUR / s.rateUSD : 0;
-  const totalEGP = s.rateEGP ? totalEUR / s.rateEGP : 0;
 
   document.getElementById('totalEUR').textContent = '€' + fmt(totalEUR);
-  document.getElementById('totalUSD').textContent = '$' + fmt(totalUSD, 0);
-  document.getElementById('totalEGP').textContent = fmt(totalEGP, 0);
   document.getElementById('nisabValEUR').textContent = '€' + fmt(nisabValEUR, 0);
 
   const aboveNisab = totalEUR >= nisabValEUR && nisabValEUR > 0;
   const badge = document.getElementById('statusBadge');
   badge.innerHTML = aboveNisab
-    ? `<span class="badge above">تجاوزتِ النصاب</span>`
-    : `<span class="badge below">لسه أقل من النصاب</span>`;
+    ? `<span class="badge above">تجاوزت النصاب</span>`
+    : `<span class="badge below">أقل من النصاب حاليًا</span>`;
 
-  // Hawl logic
-  const today = new Date(); today.setHours(0,0,0,0);
   const hawl = data.hawl;
-
-  if(aboveNisab){
-    if(!hawl.nisabDate){
-      hawl.nisabDate = today.toISOString().slice(0,10);
-      persist();
-    }
-  } else {
-    if(hawl.nisabDate){
-      hawl.nisabDate = null;
-      hawl.lastZakatPaidDate = null;
-      persist();
-    }
-  }
+  document.getElementById('nisabDateInput').value = hawl.nisabDate || '';
 
   const ringEl = document.getElementById('ringEl');
   const ringPct = document.getElementById('ringPct');
   const hawlText = document.getElementById('hawlText');
   const zakatCard = document.getElementById('zakatCard');
 
-  if(!hawl.nisabDate){
+  if(!aboveNisab){
     ringEl.style.setProperty('--pct', 0);
     ringPct.textContent = '0%';
-    hawlText.innerHTML = `لسه ما وصلتش النصاب. لما إجمالي أموالك يتعدى <b>€${fmt(nisabValEUR,0)}</b> هيبدأ عدّ الحول تلقائيًا.`;
+    hawlText.innerHTML = hawl.nisabDate
+      ? `مالك دلوقتي أقل من النصاب. لو رجع يتعدى النصاب تاني، راجع تاريخ آخر مرة وصلت فيها للنصاب فوق.`
+      : `أنت أقل من النصاب حاليًا. لو كنت وصلت للنصاب قبل كده، دخّل التاريخ فوق عشان نحسبلك الحول.`;
     zakatCard.style.display = 'none';
     return;
   }
 
+  if(!hawl.nisabDate){
+    ringEl.style.setProperty('--pct', 0);
+    ringPct.textContent = '0%';
+    hawlText.innerHTML = `أنت فوق النصاب دلوقتي 🎉 دخّل تاريخ أول يوم وصلت فيه للنصاب فوق عشان نبدأ نحسب الحول.`;
+    zakatCard.style.display = 'none';
+    return;
+  }
+
+  const today = new Date(); today.setHours(0,0,0,0);
   const anchorDateStr = hawl.lastZakatPaidDate || hawl.nisabDate;
   const anchorDate = new Date(anchorDateStr);
   const dueDate = new Date(anchorDate); dueDate.setDate(dueDate.getDate() + HAWL_DAYS);
@@ -668,15 +689,17 @@ function computeAndRender(){
     hawlText.innerHTML = `بدأ الحول (${hijriNote}) في <b>${startDateStr}</b>.<br>يكتمل الحول بعد <b>${daysLeft} يوم</b> — بتاريخ <b>${dueDateStr}</b>.`;
     zakatCard.style.display = 'none';
   } else {
-    hawlText.innerHTML = `اكتمل الحول من <b>${startDateStr}</b> وأنت فوق النصاب. الزكاة مستحقة الآن 👇`;
+    hawlText.innerHTML = `اكتمل الحول من <b>${startDateStr}</b> وأنت لسه فوق النصاب. الزكاة مستحقة الآن 👇`;
     zakatCard.style.display = 'block';
     const zakatEUR = totalEUR * 0.025;
-    const zakatUSD = s.rateUSD ? zakatEUR / s.rateUSD : 0;
-    const zakatEGP = s.rateEGP ? zakatEUR / s.rateEGP : 0;
     document.getElementById('zakatEUR').textContent = '€' + fmt(zakatEUR);
-    document.getElementById('zakatUSD').textContent = '$' + fmt(zakatUSD, 0);
-    document.getElementById('zakatEGP').textContent = fmt(zakatEGP, 0);
   }
+}
+
+function updateNisabDate(value){
+  data.hawl.nisabDate = value || null;
+  persist();
+  computeAndRender();
 }
 
 function payZakat(){
@@ -726,7 +749,7 @@ function renderHistory(){
       row.innerHTML = `<div><div>💰 دفع زكاة: €${fmt(h.zakatEUR)}</div><div class="t">${dateStr} — الإجمالي وقتها €${fmt(h.totalEUR)}</div></div>
         <button class="btn-del btn-small" onclick="removeHistory(${idx})">حذف</button>`;
     } else {
-      row.innerHTML = `<div><div>${h.aboveNisab ? '📈' : '📉'} إجمالي €${fmt(h.totalEUR)} ${h.aboveNisab ? '(فوق النصاب)' : '(تحت النصاب)'}</div><div class="t">${dateStr}</div></div>
+      row.innerHTML = `<div><div>${h.aboveNisab ? '📈' : '📉'} إجمالي €${fmt(h.totalEUR)} ${h.aboveNisab ? '(فوق النصاب)' : '(تحت النصاب)'}</div><div class="t">${dateStr} — قيمة النصاب وقتها كانت €${fmt(h.nisabValEUR ?? 0, 0)}</div></div>
         <button class="btn-del btn-small" onclick="removeHistory(${idx})">حذف</button>`;
     }
     list.appendChild(row);
