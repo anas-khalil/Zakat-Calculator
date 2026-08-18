@@ -174,7 +174,7 @@
   <!-- Auth -->
   <div class="card" id="authCard">
     <h2>تسجيل الدخول</h2>
-    <p class="hint">سجّل دخولك عشان بياناتك تتحفظ وتتزامن بين أي جهاز بتفتح بيه.</p>
+    <p class="hint">سجّل دخولك عشان بياناتك تتحفظ وتتزامن بين أي جهاز بتفتح بيه. بياناتك متشفّرة بمفتاح مُشتق من الباسورد بتاعك — حتى مطوّر الموقع مش هيقدر يشوفها. ⚠️ محتاج تسجّل دخول كل مرة، ومفيش استرجاع لو نسيت الباسورد.</p>
     <div class="field">
       <label>الإيميل</label>
       <input type="email" id="authEmail" placeholder="example@email.com" autocomplete="email">
@@ -308,7 +308,10 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+// متطلب التشفير: لازم تسجّل دخول كل مرة (مفيش جلسة محفوظة)، لأن مفتاح التشفير بيتحسب من الباسورد
+auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
 let currentUser = null;
+let encryptionKey = null; // موجود في الذاكرة بس، مش بيتخزن في أي حتة
 
 function defaultData(){
   return {
@@ -327,21 +330,74 @@ function cryptoRandom(){
   return 'a' + Math.random().toString(36).slice(2, 10);
 }
 
+// ---- تشفير من طرف العميل (Zero-Knowledge) ----
+// المفتاح مُشتق من الباسورد + الـ uid، مش متخزن في أي حتة، فمالك المشروع مش هيقدر يفكه.
+async function deriveKey(password, uid){
+  const enc = new TextEncoder();
+  const baseKey = await crypto.subtle.importKey(
+    'raw', enc.encode(password), { name: 'PBKDF2' }, false, ['deriveKey']
+  );
+  const salt = enc.encode('zakat-salt-' + uid);
+  return await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' },
+    baseKey,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+function bufToBase64(buf){
+  return btoa(String.fromCharCode(...new Uint8Array(buf)));
+}
+function base64ToBuf(b64){
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return arr.buffer;
+}
+
+async function encryptData(key, obj){
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const enc = new TextEncoder();
+  const plaintext = enc.encode(JSON.stringify(obj));
+  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, plaintext);
+  return { iv: bufToBase64(iv), ciphertext: bufToBase64(ciphertext) };
+}
+
+async function decryptData(key, encObj){
+  const iv = new Uint8Array(base64ToBuf(encObj.iv));
+  const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, base64ToBuf(encObj.ciphertext));
+  return JSON.parse(new TextDecoder().decode(plainBuf));
+}
+
 async function loadData(){
   try{
     const doc = await db.collection('zakatUsers').doc(currentUser.uid).get();
-    data = doc.exists ? doc.data() : defaultData();
+    if(!doc.exists){
+      data = defaultData();
+    } else {
+      const raw = doc.data();
+      if(raw && raw.ciphertext && raw.iv){
+        data = await decryptData(encryptionKey, raw);
+      } else {
+        // بيانات قديمة كانت متخزنة من غير تشفير — هتتشفر تلقائيًا أول ما تتحفظ تاني
+        data = raw;
+      }
+    }
   }catch(e){
-    console.error('load error', e);
+    console.error('load/decrypt error', e);
+    showAuthMsg('حصل خطأ في فك التشفير — تأكد إن الباسورد صح.');
     data = defaultData();
   }
   render();
 }
 
 async function persist(){
-  if(!currentUser) return;
+  if(!currentUser || !encryptionKey) return;
   try{
-    await db.collection('zakatUsers').doc(currentUser.uid).set(data);
+    const enc = await encryptData(encryptionKey, data);
+    await db.collection('zakatUsers').doc(currentUser.uid).set(enc);
   }catch(e){
     console.error('storage error', e);
   }
@@ -352,7 +408,14 @@ function showAuthMsg(text){
   document.getElementById('authMsg').textContent = text;
 }
 
-function doSignup(){
+function showApp(user){
+  currentUser = user;
+  document.getElementById('authCard').style.display = 'none';
+  document.getElementById('appContent').style.display = 'block';
+  document.getElementById('userEmailLabel').textContent = user.email;
+}
+
+async function doSignup(){
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
   if(!email || password.length < 6){
@@ -360,11 +423,17 @@ function doSignup(){
     return;
   }
   showAuthMsg('بيتم إنشاء الحساب...');
-  auth.createUserWithEmailAndPassword(email, password)
-    .catch(err => showAuthMsg('خطأ: ' + err.message));
+  try{
+    const cred = await auth.createUserWithEmailAndPassword(email, password);
+    encryptionKey = await deriveKey(password, cred.user.uid);
+    showApp(cred.user);
+    await loadData();
+  }catch(err){
+    showAuthMsg('خطأ: ' + err.message);
+  }
 }
 
-function doLogin(){
+async function doLogin(){
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
   if(!email || !password){
@@ -372,25 +441,30 @@ function doLogin(){
     return;
   }
   showAuthMsg('بيتم الدخول...');
-  auth.signInWithEmailAndPassword(email, password)
-    .catch(err => showAuthMsg('خطأ: ' + err.message));
+  try{
+    const cred = await auth.signInWithEmailAndPassword(email, password);
+    encryptionKey = await deriveKey(password, cred.user.uid);
+    showApp(cred.user);
+    await loadData();
+  }catch(err){
+    showAuthMsg('خطأ: ' + err.message);
+  }
 }
 
 function doLogout(){
   auth.signOut();
+  encryptionKey = null;
+  data = null;
 }
 
-auth.onAuthStateChanged(async (user) => {
-  if(user){
-    currentUser = user;
-    document.getElementById('authCard').style.display = 'none';
-    document.getElementById('appContent').style.display = 'block';
-    document.getElementById('userEmailLabel').textContent = user.email;
-    await loadData();
-  } else {
+auth.onAuthStateChanged((user) => {
+  if(!user){
     currentUser = null;
+    encryptionKey = null;
     document.getElementById('authCard').style.display = 'block';
     document.getElementById('appContent').style.display = 'none';
+    document.getElementById('authEmail').value = '';
+    document.getElementById('authPassword').value = '';
   }
 });
 
