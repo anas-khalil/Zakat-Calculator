@@ -154,6 +154,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -167,7 +168,7 @@
   <!-- Auth -->
   <div class="card" id="authCard">
     <h2>تسجيل الدخول</h2>
-    <p class="hint">سجّل دخولك عشان بياناتك تتحفظ وتتزامن بين أي جهاز بتفتح بيه. بياناتك متشفّرة بمفتاح مُشتق من الباسورد بتاعك — حتى مطوّر الموقع مش هيقدر يشوفها. ⚠️ محتاج تسجّل دخول كل مرة، ومفيش استرجاع لو نسيت الباسورد.</p>
+    <p class="hint">سجّل دخولك عشان بياناتك تتحفظ وتتزامن بين أي جهاز بتفتح بيه. بياناتك متشفّرة بمفتاح — حتى مطوّر الموقع مش هيقدر يشوفها. ⚠️ محتاج تسجّل دخول كل مرة، واحتفظ بمفتاح الاسترداد اللي هيظهرلك عند إنشاء الحساب.</p>
     <div class="field">
       <label>الإيميل</label>
       <input type="email" id="authEmail" placeholder="example@email.com" autocomplete="email">
@@ -178,7 +179,30 @@
     </div>
     <button class="btn-primary" onclick="doLogin()">دخول</button>
     <button class="btn-ghost" style="margin-top:8px; width:100%;" onclick="doSignup()">إنشاء حساب جديد</button>
+    <button class="btn-ghost" style="margin-top:8px; width:100%; border:none; text-decoration:underline;" onclick="doForgotPassword()">نسيت الباسورد؟</button>
     <div class="save-msg" id="authMsg"></div>
+  </div>
+
+  <!-- Recovery phrase entry (shown when password-derived key doesn't unlock the data, e.g. after a password reset) -->
+  <div class="card" id="recoveryCard" style="display:none;">
+    <h2>استرجاع الوصول ببيانات مفتاح الاسترداد</h2>
+    <p class="hint">الباسورد الجديد بتاعك مش هو نفسه اللي شفّرت بيه بياناتك الأول. اكتب الـ 12 كلمة اللي حفظتها وقت إنشاء الحساب عشان نرجّعلك بياناتك ونربط الباسورد الجديد بيها.</p>
+    <div class="field">
+      <label>عبارة الاسترداد (12 كلمة)</label>
+      <input type="text" id="recoveryInput" placeholder="كلمة1 كلمة2 كلمة3 ...">
+    </div>
+    <button class="btn-gold" onclick="doRecoverWithPhrase()">استرجاع</button>
+    <div class="save-msg" id="recoveryMsg"></div>
+  </div>
+
+  <!-- Recovery phrase display (shown once, right after signup) -->
+  <div class="card" id="recoveryDisplayCard" style="display:none;">
+    <h2>⚠️ احفظ مفتاح الاسترداد بتاعك</h2>
+    <p class="hint">الـ 12 كلمة دي هي الطريقة الوحيدة ترجع بيها لبياناتك لو نسيت الباسورد. اكتبها وسيبها في مكان آمن (ورقة، مدير باسوردات). مش هتظهر تاني بعد كده، ومحدش غيرك — ولا حتى مطوّر الموقع — يقدر يجيبها لو ضاعت.</p>
+    <div class="field">
+      <div id="recoveryPhraseDisplay" style="background:var(--surface-2); border:1.5px solid var(--gold); border-radius:10px; padding:14px; font-weight:700; font-size:15px; line-height:2; text-align:center; letter-spacing:.3px;"></div>
+    </div>
+    <button class="btn-gold" onclick="confirmRecoverySaved()">✓ حفظت العبارة في مكان آمن، كمّل</button>
   </div>
 
   <div id="appContent" style="display:none;">
@@ -191,18 +215,23 @@
   <!-- Prices -->
   <div class="card">
     <div class="eyebrow">الخطوة الأولى</div>
-    <h2>سعر الذهب والعملات</h2>
-    <p class="hint">دوس "تحديث سعر الذهب الآن (لايف)" وهيجيب آخر سعر لجرام الذهب. أو دخّله يدوي لو حبيت.</p>
+    <h2>نوع النصاب والسعر</h2>
+    <p class="hint">اختار تحسب نصابك بالذهب (٨٥ جرام عيار ٢٤) ولا بالفضة (٥٩٥ جرام) — نصاب الفضة أقل قيمة عادة، فبعض أهل العلم يرون إنه أحوط للفقراء. دوس "تحديث السعر الآن" وهيجيب آخر سعر، أو دخّله يدوي.</p>
+
+    <div class="row" style="margin-bottom:14px;">
+      <button class="btn-ghost btn-small" id="nisabTypeGoldBtn" style="flex:1;" onclick="setNisabType('gold')">🥇 نصاب الذهب</button>
+      <button class="btn-ghost btn-small" id="nisabTypeSilverBtn" style="flex:1;" onclick="setNisabType('silver')">🥈 نصاب الفضة</button>
+    </div>
 
     <div class="field">
-      <label>سعر جرام الذهب عيار 24 (يورو)</label>
-      <input type="number" step="0.01" id="goldPrice" placeholder="مثال: 122.00">
+      <label id="metalPriceLabel">سعر جرام الذهب عيار 24 (يورو)</label>
+      <input type="number" step="0.01" id="metalPrice" placeholder="مثال: 122.00">
     </div>
     <div class="field">
-      <label>النصاب بالجرام (المعتاد ٨٥ جرام)</label>
+      <label id="nisabGramsLabel">النصاب بالجرام (المعتاد ٨٥ جرام)</label>
       <input type="number" step="0.1" id="nisabGrams" placeholder="85">
     </div>
-    <button class="btn-gold" onclick="fetchLivePrices()" id="liveBtn">🔄 تحديث سعر الذهب الآن (لايف)</button>
+    <button class="btn-gold" onclick="fetchLivePrices()" id="liveBtn">🔄 تحديث السعر الآن (لايف)</button>
     <div class="save-msg" id="liveMsg"></div>
     <button class="btn-primary" style="margin-top:10px;" onclick="saveSettings()">حفظ السعر</button>
   </div>
@@ -216,11 +245,22 @@
     <button class="btn-ghost btn-small" style="margin-top:10px;" onclick="addAccount()">+ إضافة حساب</button>
   </div>
 
+  <!-- Debts -->
+  <div class="card">
+    <div class="eyebrow">اختياري</div>
+    <h2>الديون المستحقة عليك حاليًا</h2>
+    <p class="hint">الديون قصيرة الأجل (اللي مطلوب منك تسددها قريب) بتتخصم من إجمالي أموالك قبل ما نقارنها بالنصاب — الزكاة بتكون على صافي المال بس.</p>
+    <div class="field">
+      <label>إجمالي الديون (باليورو)</label>
+      <input type="number" step="0.01" id="debtsEUR" placeholder="0" onchange="updateDebts(this.value)">
+    </div>
+  </div>
+
   <!-- Totals -->
   <div class="card">
     <h2>الإجمالي مقابل النصاب</h2>
     <div class="totals">
-      <div class="label">إجمالي أموالك (باليورو)</div>
+      <div class="label">صافي أموالك بعد الديون (باليورو)</div>
       <div class="big" id="totalEUR">€0.00</div>
       <div class="grid3">
         <div style="flex:1;"><div class="v" id="nisabValEUR">€0</div><div class="k">قيمة النصاب</div></div>
@@ -236,6 +276,11 @@
       <label>آخر مرة وصلت فيها للنصاب (لو حصل قبل كده)</label>
       <input type="date" id="nisabDateInput" onchange="updateNisabDate(this.value)">
     </div>
+    <label style="display:flex; align-items:center; gap:8px; font-weight:600; font-size:13px; color:var(--ink-soft); margin-bottom:14px; cursor:pointer;">
+      <input type="checkbox" id="notifyEmailCheck" style="width:auto;" onchange="updateNotifySetting(this.checked)">
+      نبّهني بإيميل لما يكتمل الحول وتبقى الزكاة مستحقة
+    </label>
+    <p class="hint" style="margin-top:-8px;">⚠️ الإشعار ده بيتبعت بس وقت ما تفتح الموقع بعد اكتمال الحول، مش تنبيه تلقائي في الخلفية حتى لو الموقع مقفول — التطبيق ده من غير سيرفر خلفي.</p>
     <div class="moon-ring">
       <div class="ring" id="ringEl" style="--pct:0"><span id="ringPct">0%</span></div>
       <div class="hawl-info">
@@ -305,13 +350,22 @@ const CURRENCIES = [
 
 function defaultData(){
   return {
-    settings: { goldPrice: 122, nisabGrams: 85, rates: { EUR: { rate: 1, updatedAt: Date.now() } } },
+    settings: {
+      nisabType: 'gold', // 'gold' or 'silver'
+      goldPrice: 122,
+      silverPrice: 1.2,
+      nisabGramsGold: 85,
+      nisabGramsSilver: 595,
+      debtsEUR: 0,
+      notifyEmail: false,
+      rates: { EUR: { rate: 1, updatedAt: Date.now() } }
+    },
     accounts: [
       { id: cryptoRandom(), name: 'حساب يورو', currency: 'EUR', amount: 0 },
       { id: cryptoRandom(), name: 'حساب دولار', currency: 'USD', amount: 0 },
       { id: cryptoRandom(), name: 'حساب جنيه', currency: 'EGP', amount: 0 }
     ],
-    hawl: { nisabDate: null, lastZakatPaidDate: null },
+    hawl: { nisabDate: null, lastZakatPaidDate: null, lastNotifiedDueDate: null },
     history: []
   };
 }
@@ -320,14 +374,41 @@ function cryptoRandom(){
   return 'a' + Math.random().toString(36).slice(2, 10);
 }
 
+// ---- عبارة الاسترداد (Recovery phrase) ----
+const WORDLIST = [
+  'apple','river','stone','cloud','tiger','ocean','maple','flame','coral','amber',
+  'north','south','eagle','pearl','delta','frost','grove','honey','ivory','jade',
+  'kite','lemon','mango','noble','olive','peach','quartz','raven','sage','teal',
+  'urban','vivid','willow','xenon','yield','zebra','anchor','beacon','canyon','desert',
+  'ember','falcon','garnet','harbor','island','jungle','kernel','lagoon','marble','nectar',
+  'onyx','plume','quill','ridge','summit','thistle','umbra','valley','wander','yonder',
+  'zenith','arrow','breeze','cedar','dawn','echo','forest','glacier','horizon','indigo',
+  'jasper','knight','lotus','meadow','nimbus','opal','prairie','quiver','ripple','shadow',
+  'tundra','unity','violet','whisper','xylem','yarrow','zephyr','alder','birch','clover',
+  'dune','elm','fern','granite','holly','iris','juniper','koala','linen','myrtle',
+  'nectarine','oasis','petal','quokka','reef','sable','topaz','umber','velvet','walnut',
+  'ballad','citrus','dahlia','ferrous','glide','hollow','ironwood','jubilee','karma','lantern',
+  'mosaic','nomad','oracle','pinnacle','quest'
+];
+
+function generateRecoveryPhrase(){
+  const arr = new Uint32Array(12);
+  crypto.getRandomValues(arr);
+  const words = [];
+  for(let i = 0; i < 12; i++) words.push(WORDLIST[arr[i] % WORDLIST.length]);
+  return words.join(' ');
+}
+
 // ---- تشفير من طرف العميل (Zero-Knowledge) ----
-// المفتاح مُشتق من الباسورد + الـ uid، مش متخزن في أي حتة، فمالك المشروع مش هيقدر يفكه.
-async function deriveKey(password, uid){
+// كل بيانات المستخدم متشفرة بـ "مفتاح رئيسي" عشوائي، والمفتاح الرئيسي ده نفسه متخزن
+// مشفّرًا بنسختين: واحدة بمفتاح مُشتق من الباسورد، وواحدة بمفتاح مُشتق من عبارة الاسترداد.
+// كده لو نسيت الباسورد، تقدر ترجع بعبارة الاسترداد بس، من غير ما مالك المشروع يقدر يشوف بياناتك.
+async function deriveKey(secret, uid, purpose){
   const enc = new TextEncoder();
   const baseKey = await crypto.subtle.importKey(
-    'raw', enc.encode(password), { name: 'PBKDF2' }, false, ['deriveKey']
+    'raw', enc.encode(secret), { name: 'PBKDF2' }, false, ['deriveKey']
   );
-  const salt = enc.encode('zakat-salt-' + uid);
+  const salt = enc.encode('zakat-salt-' + purpose + '-' + uid);
   return await crypto.subtle.deriveKey(
     { name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' },
     baseKey,
@@ -335,6 +416,23 @@ async function deriveKey(password, uid){
     false,
     ['encrypt', 'decrypt']
   );
+}
+
+async function generateMasterKey(){
+  return await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
+}
+
+async function wrapKey(masterKey, wrappingKey){
+  const raw = await crypto.subtle.exportKey('raw', masterKey);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, wrappingKey, raw);
+  return { iv: bufToBase64(iv), ciphertext: bufToBase64(ciphertext) };
+}
+
+async function unwrapKey(wrapped, wrappingKey){
+  const iv = new Uint8Array(base64ToBuf(wrapped.iv));
+  const raw = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, wrappingKey, base64ToBuf(wrapped.ciphertext));
+  return await crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, true, ['encrypt', 'decrypt']);
 }
 
 function bufToBase64(buf){
@@ -419,10 +517,12 @@ async function loadData(){
       data = defaultData();
     } else {
       const raw = doc.data();
-      if(raw && raw.ciphertext && raw.iv){
+      if(raw && raw.data && raw.data.ciphertext){
+        data = await decryptData(encryptionKey, raw.data);
+      } else if(raw && raw.ciphertext){
+        // شكل قديم من غير مفتاح استرداد — هيتحول تلقائيًا للشكل الجديد أول ما يتحفظ
         data = await decryptData(encryptionKey, raw);
       } else {
-        // بيانات قديمة كانت متخزنة من غير تشفير — هتتشفر تلقائيًا أول ما تتحفظ تاني
         data = raw;
       }
     }
@@ -439,7 +539,7 @@ async function persist(){
   if(!currentUser || !encryptionKey) return;
   try{
     const enc = await encryptData(encryptionKey, data);
-    await db.collection('zakatUsers').doc(currentUser.uid).set(enc);
+    await db.collection('zakatUsers').doc(currentUser.uid).set({ data: enc }, { merge: true });
   }catch(e){
     console.error('storage error', e);
   }
@@ -453,6 +553,7 @@ function showAuthMsg(text){
 function showApp(user){
   currentUser = user;
   document.getElementById('authCard').style.display = 'none';
+  document.getElementById('recoveryCard').style.display = 'none';
   document.getElementById('appContent').style.display = 'block';
   document.getElementById('userEmailLabel').textContent = user.email;
 }
@@ -467,13 +568,37 @@ async function doSignup(){
   showAuthMsg('بيتم إنشاء الحساب...');
   try{
     const cred = await auth.createUserWithEmailAndPassword(email, password);
-    encryptionKey = await deriveKey(password, cred.user.uid);
-    showApp(cred.user);
-    await loadData();
+    const uid = cred.user.uid;
+    const masterKey = await generateMasterKey();
+    const recoveryPhrase = generateRecoveryPhrase();
+    const keyFromPw = await deriveKey(password, uid, 'pw');
+    const keyFromRec = await deriveKey(recoveryPhrase, uid, 'rec');
+    const keyWrapPw = await wrapKey(masterKey, keyFromPw);
+    const keyWrapRecovery = await wrapKey(masterKey, keyFromRec);
+
+    encryptionKey = masterKey;
+    currentUser = cred.user;
+    data = defaultData();
+    const encData = await encryptData(masterKey, data);
+    await db.collection('zakatUsers').doc(uid).set({ data: encData, keyWrapPw, keyWrapRecovery });
+
+    // اعرض عبارة الاسترداد قبل ما ندخل التطبيق
+    document.getElementById('authCard').style.display = 'none';
+    document.getElementById('recoveryPhraseDisplay').textContent = recoveryPhrase;
+    document.getElementById('recoveryDisplayCard').style.display = 'block';
   }catch(err){
     showAuthMsg('خطأ: ' + err.message);
   }
 }
+
+function confirmRecoverySaved(){
+  document.getElementById('recoveryDisplayCard').style.display = 'none';
+  showApp(currentUser);
+  render();
+}
+
+let pendingDocData = null;
+let pendingUid = null;
 
 async function doLogin(){
   const email = document.getElementById('authEmail').value.trim();
@@ -485,9 +610,68 @@ async function doLogin(){
   showAuthMsg('بيتم الدخول...');
   try{
     const cred = await auth.signInWithEmailAndPassword(email, password);
-    encryptionKey = await deriveKey(password, cred.user.uid);
+    const uid = cred.user.uid;
+    const doc = await db.collection('zakatUsers').doc(uid).get();
+    const docData = doc.exists ? doc.data() : null;
+
+    if(docData && docData.keyWrapPw){
+      const keyFromPw = await deriveKey(password, uid, 'pw');
+      try{
+        encryptionKey = await unwrapKey(docData.keyWrapPw, keyFromPw);
+        currentUser = cred.user;
+        showApp(cred.user);
+        await loadData();
+        return;
+      }catch(unwrapErr){
+        // الباسورد الجديد (بعد إعادة تعيين) مش هو اللي شُفّر بيه المفتاح — يحتاج عبارة استرداد
+        currentUser = cred.user;
+        pendingDocData = docData;
+        pendingUid = uid;
+        document.getElementById('authCard').style.display = 'none';
+        document.getElementById('recoveryCard').style.display = 'block';
+        return;
+      }
+    }
+
+    // مستخدم قديم من غير نظام مفاتيح الاسترداد (توافقًا للخلف)
+    encryptionKey = await deriveKey(password, uid, '');
+    currentUser = cred.user;
     showApp(cred.user);
     await loadData();
+  }catch(err){
+    showAuthMsg('خطأ: ' + err.message);
+  }
+}
+
+async function doRecoverWithPhrase(){
+  const phrase = document.getElementById('recoveryInput').value.trim().toLowerCase();
+  const msg = document.getElementById('recoveryMsg');
+  const newPassword = document.getElementById('authPassword').value;
+  if(!phrase){ msg.textContent = 'اكتب عبارة الاسترداد'; return; }
+  msg.textContent = 'بيتم التحقق...';
+  try{
+    const keyFromRec = await deriveKey(phrase, pendingUid, 'rec');
+    const masterKey = await unwrapKey(pendingDocData.keyWrapRecovery, keyFromRec);
+    // اربط الباسورد الحالي (الجديد) بالمفتاح الرئيسي عشان الدخول العادي يشتغل تاني
+    const keyFromNewPw = await deriveKey(newPassword, pendingUid, 'pw');
+    const keyWrapPw = await wrapKey(masterKey, keyFromNewPw);
+    await db.collection('zakatUsers').doc(pendingUid).set({ keyWrapPw }, { merge: true });
+
+    encryptionKey = masterKey;
+    showApp(currentUser);
+    await loadData();
+  }catch(e){
+    console.error(e);
+    msg.textContent = 'عبارة الاسترداد غلط أو مش متطابقة. تأكد إنك كتبتها بالظبط زي ما اتسجلت.';
+  }
+}
+
+async function doForgotPassword(){
+  const email = document.getElementById('authEmail').value.trim();
+  if(!email){ showAuthMsg('اكتب إيميلك الأول'); return; }
+  try{
+    await auth.sendPasswordResetEmail(email);
+    showAuthMsg('اتبعت لك رسالة لإعادة تعيين الباسورد على إيميلك. بعد ما تغيّره، سجّل دخول بالباسورد الجديد وهنطلب منك عبارة الاسترداد.');
   }catch(err){
     showAuthMsg('خطأ: ' + err.message);
   }
@@ -504,6 +688,8 @@ auth.onAuthStateChanged((user) => {
     currentUser = null;
     encryptionKey = null;
     document.getElementById('authCard').style.display = 'block';
+    document.getElementById('recoveryCard').style.display = 'none';
+    document.getElementById('recoveryDisplayCard').style.display = 'none';
     document.getElementById('appContent').style.display = 'none';
     document.getElementById('authEmail').value = '';
     document.getElementById('authPassword').value = '';
@@ -523,8 +709,37 @@ function toEUR(amount, currency){
 
 function renderSettingsInputs(){
   const s = data.settings;
-  document.getElementById('goldPrice').value = s.goldPrice ?? '';
-  document.getElementById('nisabGrams').value = s.nisabGrams ?? '';
+  const isGold = s.nisabType !== 'silver';
+  document.getElementById('metalPrice').value = (isGold ? s.goldPrice : s.silverPrice) ?? '';
+  document.getElementById('nisabGrams').value = (isGold ? s.nisabGramsGold : s.nisabGramsSilver) ?? '';
+  document.getElementById('metalPriceLabel').textContent = isGold
+    ? 'سعر جرام الذهب عيار 24 (يورو)' : 'سعر جرام الفضة (يورو)';
+  document.getElementById('nisabGramsLabel').textContent = isGold
+    ? 'النصاب بالجرام (المعتاد ٨٥ جرام ذهب)' : 'النصاب بالجرام (المعتاد ٥٩٥ جرام فضة)';
+  document.getElementById('nisabTypeGoldBtn').style.background = isGold ? 'var(--bg)' : 'transparent';
+  document.getElementById('nisabTypeGoldBtn').style.color = isGold ? 'var(--gold-bright)' : 'var(--bg)';
+  document.getElementById('nisabTypeSilverBtn').style.background = !isGold ? 'var(--bg)' : 'transparent';
+  document.getElementById('nisabTypeSilverBtn').style.color = !isGold ? 'var(--gold-bright)' : 'var(--bg)';
+  document.getElementById('debtsEUR').value = s.debtsEUR || '';
+  document.getElementById('notifyEmailCheck').checked = !!s.notifyEmail;
+}
+
+function setNisabType(type){
+  data.settings.nisabType = type;
+  persist();
+  renderSettingsInputs();
+  computeAndRender();
+}
+
+function updateDebts(value){
+  data.settings.debtsEUR = parseFloat(value) || 0;
+  persist();
+  computeAndRender();
+}
+
+function updateNotifySetting(checked){
+  data.settings.notifyEmail = checked;
+  persist();
 }
 
 // ضع مفتاح goldapi.io بتاعك هنا (احتفظ بيه سري قدر الإمكان — أي حد يفتح الصفحة يقدر يشوفه في الكود)
@@ -538,23 +753,24 @@ async function fetchLivePrices(){
   btn.textContent = 'بيدوّر دلوقتي...';
   msg.textContent = '';
 
+  const isGold = data.settings.nisabType !== 'silver';
+  const symbol = isGold ? 'XAU' : 'XAG';
+
   try{
-    // سعر الذهب من goldapi.io (محتاج مفتاح مجاني)
-    const goldRes = await fetch('https://www.goldapi.io/api/XAU/EUR', {
+    const res = await fetch(`https://www.goldapi.io/api/${symbol}/EUR`, {
       headers: { 'x-access-token': GOLDAPI_KEY, 'Content-Type': 'application/json' }
     });
-    if(!goldRes.ok) throw new Error('gold HTTP ' + goldRes.status);
-    const gold = await goldRes.json();
-    // goldapi بيرجع price_gram_24k جاهز
-    const goldPricePerGram24kEUR = gold.price_gram_24k;
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    // price بيرجع بسعر الأونصة التروي، نحوّله لجرام (1 أونصة = 31.1034768 جرام)
+    const pricePerGram = json.price_gram_24k || (json.price / 31.1034768);
 
-    document.getElementById('goldPrice').value = Number(goldPricePerGram24kEUR).toFixed(2);
-
+    document.getElementById('metalPrice').value = Number(pricePerGram).toFixed(2);
     saveSettings();
     msg.textContent = 'تم التحديث ✓ متنساش تراجع الرقم';
   }catch(e){
     console.error(e);
-    msg.textContent = 'معرفتش أجيب سعر الذهب لايف — تأكد إنك متصل بالنت أو دخّله يدوي.';
+    msg.textContent = 'معرفتش أجيب السعر لايف — تأكد إنك متصل بالنت أو دخّله يدوي.';
   }finally{
     btn.disabled = false;
     btn.textContent = originalText;
@@ -563,8 +779,16 @@ async function fetchLivePrices(){
 }
 
 function saveSettings(){
-  data.settings.goldPrice = parseFloat(document.getElementById('goldPrice').value) || 0;
-  data.settings.nisabGrams = parseFloat(document.getElementById('nisabGrams').value) || 0;
+  const isGold = data.settings.nisabType !== 'silver';
+  const priceVal = parseFloat(document.getElementById('metalPrice').value) || 0;
+  const gramsVal = parseFloat(document.getElementById('nisabGrams').value) || 0;
+  if(isGold){
+    data.settings.goldPrice = priceVal;
+    data.settings.nisabGramsGold = gramsVal;
+  } else {
+    data.settings.silverPrice = priceVal;
+    data.settings.nisabGramsSilver = gramsVal;
+  }
   persist();
   computeAndRender();
 }
@@ -627,13 +851,18 @@ function removeAccount(id){
 }
 
 function computeTotals(){
-  const totalEUR = data.accounts.reduce((sum, a) => sum + toEUR(a.amount || 0, a.currency), 0);
-  const nisabValEUR = (data.settings.goldPrice || 0) * (data.settings.nisabGrams || 0);
-  return { totalEUR, nisabValEUR };
+  const grossEUR = data.accounts.reduce((sum, a) => sum + toEUR(a.amount || 0, a.currency), 0);
+  const debtsEUR = data.settings.debtsEUR || 0;
+  const totalEUR = grossEUR - debtsEUR;
+  const isGold = data.settings.nisabType !== 'silver';
+  const metalPrice = isGold ? (data.settings.goldPrice || 0) : (data.settings.silverPrice || 0);
+  const nisabGrams = isGold ? (data.settings.nisabGramsGold || 0) : (data.settings.nisabGramsSilver || 0);
+  const nisabValEUR = metalPrice * nisabGrams;
+  return { grossEUR, debtsEUR, totalEUR, nisabValEUR };
 }
 
 function computeAndRender(){
-  const { totalEUR, nisabValEUR } = computeTotals();
+  const { grossEUR, debtsEUR, totalEUR, nisabValEUR } = computeTotals();
 
   document.getElementById('totalEUR').textContent = '€' + fmt(totalEUR);
   document.getElementById('nisabValEUR').textContent = '€' + fmt(nisabValEUR, 0);
@@ -693,6 +922,33 @@ function computeAndRender(){
     zakatCard.style.display = 'block';
     const zakatEUR = totalEUR * 0.025;
     document.getElementById('zakatEUR').textContent = '€' + fmt(zakatEUR);
+
+    // إشعار بريدي (لو مفعّل) — بيتبعت مرة واحدة بس لكل تاريخ استحقاق
+    if(data.settings.notifyEmail && hawl.lastNotifiedDueDate !== dueDateStr){
+      sendZakatDueEmail(zakatEUR, dueDateStr);
+      hawl.lastNotifiedDueDate = dueDateStr;
+      persist();
+    }
+  }
+}
+
+// ---- إشعار بريدي عبر EmailJS (اختياري، بيتبعت بس لما تفتح الموقع بعد اكتمال الحول) ----
+const EMAILJS_PUBLIC_KEY = "Ea2Gy6z-8txSI-BSr";
+const EMAILJS_SERVICE_ID = "service_xc43gzt";
+const EMAILJS_TEMPLATE_ID = "template_xrtcp2l";
+
+function sendZakatDueEmail(zakatEUR, dueDateStr){
+  if(typeof emailjs === 'undefined' || !currentUser) return;
+  try{
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_email: currentUser.email,
+      name: 'حاسبة الزكاة',
+      email: currentUser.email,
+      title: 'الزكاة مستحقة الآن 🌙',
+      message: `اكتمل حول مالك وأنت لسه فوق النصاب. الزكاة المستحقة عليك دلوقتي: ${'€' + fmt(zakatEUR)}. تاريخ اكتمال الحول: ${dueDateStr}.`
+    }, EMAILJS_PUBLIC_KEY).catch(e => console.error('email send error', e));
+  }catch(e){
+    console.error('emailjs error', e);
   }
 }
 
@@ -701,6 +957,7 @@ function updateNisabDate(value){
   persist();
   computeAndRender();
 }
+
 
 function payZakat(){
   const { totalEUR } = computeTotals();
